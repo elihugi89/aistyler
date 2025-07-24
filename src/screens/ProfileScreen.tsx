@@ -1,191 +1,85 @@
-import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  Switch,
-} from 'react-native';
-import {
-  Text,
-  Button,
-  Card,
-  ListItem,
-  Divider,
-  Avatar,
-} from '@rneui/themed';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
+import { usePreferences } from '../contexts/PreferencesContext';
+import { theme } from '../theme';
+import { LoadingScreen } from '../components/LoadingScreen';
 
-const ProfileScreen = () => {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+export const ProfileScreen = () => {
+  const { user, logout, isLoading: isAuthLoading } = useAuth();
+  const { preferences, isLoading: isPreferencesLoading } = usePreferences();
 
-  const userStats = {
-    totalOutfits: 24,
-    savedOutfits: 12,
-    wardrobeItems: 45,
-    favoriteStyle: 'Elegant',
-  };
+  if (isAuthLoading || isPreferencesLoading) {
+    return <LoadingScreen />;
+  }
 
-  const recentActivity = [
-    { id: '1', action: 'Created outfit', item: 'Evening Wedding Look', time: '2 hours ago' },
-    { id: '2', action: 'Added item', item: 'Black Blazer', time: '1 day ago' },
-    { id: '3', action: 'Saved outfit', item: 'Business Professional', time: '2 days ago' },
-    { id: '4', action: 'Created outfit', item: 'Casual Weekend', time: '3 days ago' },
-  ];
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged out') },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error logging out:', error);
+      alert('Failed to log out. Please try again.');
+    }
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: '#ffffff' }]}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Avatar
-          size="large"
-          rounded
-          icon={{ name: 'person', type: 'ionicon' }}
-          containerStyle={[styles.avatar, { backgroundColor: '#6366f1' }]}
-        />
-        <Text style={[styles.userName, { fontSize: 24, fontWeight: 'bold' }]}>Sarah Johnson</Text>
-        <Text style={styles.userEmail}>sarah.johnson@email.com</Text>
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={40} color={theme.colors.onPrimary} />
+          </View>
+          <Text style={styles.name}>{user?.name || 'Guest'}</Text>
+          <Text style={styles.email}>{user?.email || 'Not signed in'}</Text>
+        </View>
       </View>
 
-      <Card containerStyle={styles.statsCard}>
-        <Card.Title>Your Styling Stats</Card.Title>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{userStats.totalOutfits}</Text>
-            <Text style={styles.statLabel}>Total Outfits</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{userStats.savedOutfits}</Text>
-            <Text style={styles.statLabel}>Saved</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{userStats.wardrobeItems}</Text>
-            <Text style={styles.statLabel}>Wardrobe Items</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{userStats.favoriteStyle}</Text>
-            <Text style={styles.statLabel}>Favorite Style</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Style Preferences</Text>
+        
+        <View style={styles.preferenceGroup}>
+          <Text style={styles.preferenceTitle}>Favorite Colors</Text>
+          <View style={styles.tags}>
+            {preferences.favoriteColors.map(color => (
+              <View key={color} style={styles.tag}>
+                <Text style={styles.tagText}>{color}</Text>
+              </View>
+            ))}
           </View>
         </View>
-      </Card>
 
-      <Card containerStyle={styles.card}>
-        <Card.Title>Recent Activity</Card.Title>
-        {recentActivity.map((activity, index) => (
-          <View key={activity.id}>
-            <ListItem key={activity.id}>
-              <Ionicons 
-                name="time-outline" 
-                size={20} 
-                color="#6366f1" 
-              />
-              <ListItem.Content>
-                <ListItem.Title style={styles.activityTitle}>
-                  {activity.action}: {activity.item}
-                </ListItem.Title>
-                <ListItem.Subtitle style={styles.activityTime}>
-                  {activity.time}
-                </ListItem.Subtitle>
-              </ListItem.Content>
-            </ListItem>
-            {index < recentActivity.length - 1 && <Divider />}
+        <View style={styles.preferenceGroup}>
+          <Text style={styles.preferenceTitle}>Preferred Styles</Text>
+          <View style={styles.tags}>
+            {preferences.preferredStyles.map(style => (
+              <View key={style} style={styles.tag}>
+                <Text style={styles.tagText}>{style}</Text>
+              </View>
+            ))}
           </View>
-        ))}
-      </Card>
+        </View>
 
-      <Card containerStyle={styles.card}>
-        <Card.Title>Preferences</Card.Title>
-        
-        <ListItem>
-          <Ionicons name="notifications-outline" size={20} color="#6366f1" />
-          <ListItem.Content>
-            <ListItem.Title>Push Notifications</ListItem.Title>
-            <ListItem.Subtitle>Get notified about new outfit suggestions</ListItem.Subtitle>
-          </ListItem.Content>
-          <Switch
-            value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
-            trackColor={{ false: '#767577', true: '#6366f1' }}
-          />
-        </ListItem>
+        <View style={styles.preferenceGroup}>
+          <Text style={styles.preferenceTitle}>Seasonal Preferences</Text>
+          {Object.entries(preferences.seasonalPreferences).map(([season, styles]) => (
+            <View key={season} style={styles.seasonGroup}>
+              <Text style={styles.seasonTitle}>{season}</Text>
+              <View style={styles.tags}>
+                {styles.map(style => (
+                  <View key={style} style={styles.tag}>
+                    <Text style={styles.tagText}>{style}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
 
-        <Divider />
-
-        <ListItem>
-          <Ionicons name="moon-outline" size={20} color="#6366f1" />
-          <ListItem.Content>
-            <ListItem.Title>Dark Mode</ListItem.Title>
-            <ListItem.Subtitle>Switch to dark theme</ListItem.Subtitle>
-          </ListItem.Content>
-          <Switch
-            value={darkModeEnabled}
-            onValueChange={setDarkModeEnabled}
-            trackColor={{ false: '#767577', true: '#6366f1' }}
-          />
-        </ListItem>
-      </Card>
-
-      <Card containerStyle={styles.card}>
-        <Card.Title>Account Settings</Card.Title>
-        
-        <ListItem onPress={() => Alert.alert('Edit Profile', 'Edit profile functionality')}>
-          <Ionicons name="person-outline" size={20} color="#6366f1" />
-          <ListItem.Content>
-            <ListItem.Title>Edit Profile</ListItem.Title>
-          </ListItem.Content>
-          <ListItem.Chevron />
-        </ListItem>
-
-        <Divider />
-
-        <ListItem onPress={() => Alert.alert('Privacy', 'Privacy settings')}>
-          <Ionicons name="shield-outline" size={20} color="#6366f1" />
-          <ListItem.Content>
-            <ListItem.Title>Privacy Settings</ListItem.Title>
-          </ListItem.Content>
-          <ListItem.Chevron />
-        </ListItem>
-
-        <Divider />
-
-        <ListItem onPress={() => Alert.alert('Help', 'Help and support')}>
-          <Ionicons name="help-circle-outline" size={20} color="#6366f1" />
-          <ListItem.Content>
-            <ListItem.Title>Help & Support</ListItem.Title>
-          </ListItem.Content>
-          <ListItem.Chevron />
-        </ListItem>
-
-        <Divider />
-
-        <ListItem onPress={() => Alert.alert('About', 'About Stylist AI')}>
-          <Ionicons name="information-circle-outline" size={20} color="#6366f1" />
-          <ListItem.Content>
-            <ListItem.Title>About</ListItem.Title>
-          </ListItem.Content>
-          <ListItem.Chevron />
-        </ListItem>
-      </Card>
-
-      <Button
-        title="Logout"
-        type="outline"
-        onPress={handleLogout}
-        containerStyle={styles.logoutButton}
-        buttonStyle={[styles.logoutButtonStyle, { borderColor: '#ef4444' }]}
-        titleStyle={{ color: '#ef4444' }}
-      />
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Log Out</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -193,67 +87,85 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   header: {
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
+  },
+  avatarContainer: {
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 40,
   },
   avatar: {
-    marginBottom: 16,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.primaryDark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
   },
-  userName: {
-    marginBottom: 4,
+  name: {
+    ...theme.typography.h5,
+    color: theme.colors.onPrimary,
+    marginBottom: theme.spacing.xs,
   },
-  userEmail: {
-    opacity: 0.7,
+  email: {
+    ...theme.typography.subtitle1,
+    color: theme.colors.onPrimary,
+    opacity: 0.8,
   },
-  statsCard: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
+  section: {
+    padding: theme.spacing.lg,
   },
-  statsContainer: {
+  sectionTitle: {
+    ...theme.typography.h6,
+    color: theme.colors.onBackground,
+    marginBottom: theme.spacing.lg,
+  },
+  preferenceGroup: {
+    marginBottom: theme.spacing.xl,
+  },
+  preferenceTitle: {
+    ...theme.typography.subtitle1,
+    color: theme.colors.onBackground,
+    marginBottom: theme.spacing.md,
+  },
+  tags: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     flexWrap: 'wrap',
   },
-  statItem: {
-    alignItems: 'center',
-    marginVertical: 8,
-    minWidth: 80,
+  tag: {
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
   },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  tagText: {
+    ...theme.typography.caption,
+    color: theme.colors.onBackground,
   },
-  statLabel: {
-    fontSize: 12,
-    opacity: 0.7,
-    textAlign: 'center',
+  seasonGroup: {
+    marginBottom: theme.spacing.lg,
   },
-  card: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activityTime: {
-    fontSize: 12,
-    opacity: 0.6,
+  seasonTitle: {
+    ...theme.typography.subtitle2,
+    color: theme.colors.onBackground,
+    marginBottom: theme.spacing.sm,
+    textTransform: 'capitalize',
   },
   logoutButton: {
-    marginHorizontal: 16,
-    marginVertical: 20,
+    margin: theme.spacing.lg,
+    backgroundColor: theme.colors.error,
+    padding: theme.spacing.md,
+    borderRadius: theme.spacing.md,
+    alignItems: 'center',
   },
-  logoutButtonStyle: {
-    borderRadius: 12,
-    paddingVertical: 12,
+  logoutButtonText: {
+    ...theme.typography.button,
+    color: theme.colors.onError,
   },
-});
-
-export default ProfileScreen; 
+}); 

@@ -1,53 +1,18 @@
-export interface ClothingItem {
+export type ClothingItem = {
   id: string;
-  name: string;
+  type: 'top' | 'bottom' | 'dress' | 'shoes' | 'accessory';
+  imageUri: string;
   category: string;
+  season: 'spring' | 'summer' | 'fall' | 'winter' | 'all';
   color: string;
-  imageUri?: string;
-  description: string;
-  material?: string;
-  season?: string[];
-  tags?: string[];
-}
+  lastWorn?: Date;
+  tags: string[];
+};
 
-export interface OutfitSuggestion {
+export type Outfit = {
   id: string;
-  title: string;
-  occasion: string;
   items: ClothingItem[];
-  hairMakeup: string;
-  tips: string[];
-  rating: number;
-  date: string;
-  weather?: string;
-  formality?: string;
-}
-
-export interface UserPreferences {
-  stylePreferences: string[];
-  colorPreferences: string[];
-  occasionPreferences: string[];
-  weatherConsideration: boolean;
-  formalityLevel: 'casual' | 'business' | 'formal' | 'any';
-}
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  preferences: UserPreferences;
-  stats: {
-    totalOutfits: number;
-    savedOutfits: number;
-    wardrobeItems: number;
-    favoriteStyle: string;
-  };
-}
-
-export type NavigationParamList = {
-  Home: undefined;
-  Wardrobe: undefined;
-  Outfits: undefined;
-  Profile: undefined;
+  occasion: string;
+  season: 'spring' | 'summer' | 'fall' | 'winter';
+  createdAt: Date;
 }; 

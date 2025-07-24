@@ -13,17 +13,22 @@ import {
   Input,
   Divider,
 } from '@rneui/themed';
-// import { useTheme } from '@rneui/themed';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
+import { LoadingScreen } from '../components/LoadingScreen';
+import { theme } from '../theme';
 
-const HomeScreen = () => {
-  // const { theme } = useTheme();
+export const HomeScreen = () => {
   const navigation = useNavigation();
+  const { user, isLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   const handleGetOutfitSuggestion = async () => {
     if (!searchQuery.trim()) {
@@ -31,11 +36,11 @@ const HomeScreen = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingSuggestion(true);
     
     // Simulate AI processing
     setTimeout(() => {
-      setIsLoading(false);
+      setIsLoadingSuggestion(false);
       setShowSuggestions(true);
     }, 1500);
   };
@@ -107,10 +112,10 @@ const HomeScreen = () => {
           inputStyle={styles.inputText}
         />
         <Button
-          title={isLoading ? "Creating your outfit..." : "Get Outfit Suggestion"}
+          title={isLoadingSuggestion ? "Creating your outfit..." : "Get Outfit Suggestion"}
           onPress={handleGetOutfitSuggestion}
-          disabled={isLoading}
-          loading={isLoading}
+          disabled={isLoadingSuggestion}
+          loading={isLoadingSuggestion}
           containerStyle={styles.buttonContainer}
           buttonStyle={styles.button}
         />
@@ -367,6 +372,4 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 16,
   },
-});
-
-export default HomeScreen; 
+}); 

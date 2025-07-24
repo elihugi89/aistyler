@@ -1,0 +1,40 @@
+# React Rules
+
+## Component Structure
+- Use functional components with hooks
+- Keep components small and focused
+- Use proper prop destructuring
+- Implement proper error boundaries
+- Use React.memo for performance optimization when needed
+
+## State Management
+- Use useState for local component state
+- Use useEffect for side effects
+- Use useCallback for memoized functions
+- Use useMemo for expensive calculations
+- Use useContext for global state when appropriate
+
+## Performance
+- Avoid unnecessary re-renders
+- Use proper dependency arrays in useEffect
+- Implement proper cleanup in useEffect
+- Use React.lazy for code splitting
+- Optimize images and assets
+
+## React Native Specific
+- Use proper React Native components (View, Text, etc.)
+- Implement proper touch handling
+- Use proper styling with StyleSheet
+- Handle platform differences appropriately
+- Use proper navigation patterns
+
+## Code Organization
+- Separate concerns (UI, logic, data)
+- Use custom hooks for reusable logic
+- Keep components pure when possible
+- Use proper file structure and naming
+- Implement proper error handling
+description:
+globs:
+alwaysApply: false
+---

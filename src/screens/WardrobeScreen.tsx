@@ -18,10 +18,14 @@ import {
   Icon,
   Input,
 } from '@rneui/themed';
-// import { useTheme } from '@rneui/themed';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import AIService from '../services/AIService';
+import { useAuth } from '../contexts/AuthContext';
+import { LoadingScreen } from '../components/LoadingScreen';
+import { theme } from '../theme';
+import { aiService } from '../services/AIService';
+import { imageProcessingService, ImageProcessingResult, ProcessingStep } from '../services/ImageProcessingService';
+import { removeBgService } from '../services/RemoveBgService';
 
 interface ClothingItem {
   id: string;
@@ -41,10 +45,11 @@ interface UploadState {
   itemCategory: string;
   itemColor: string;
   itemDescription: string;
+  processingSteps?: ProcessingStep[];
 }
 
-const WardrobeScreen = () => {
-  // const { theme } = useTheme();
+export const WardrobeScreen = () => {
+  const { user, isLoading } = useAuth();
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([
     {
       id: '1',
@@ -91,16 +96,16 @@ const WardrobeScreen = () => {
     itemDescription: '',
   });
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   const categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories', 'Outerwear'];
 
-  // Use actual AI service for background removal
-  const removeBackground = async (imageUri: string): Promise<string> => {
-    try {
-      return await AIService.removeBackground(imageUri);
-    } catch (error) {
-      console.error('Background removal error:', error);
-      throw error;
-    }
+  // Mock AI background removal
+  const processImageWithAI = async (imageUri: string): Promise<ImageProcessingResult> => {
+    // Use the full enhanced processing pipeline (Remove.bg + Runway ML)
+    return await imageProcessingService.processImage(imageUri);
   };
 
   const pickImage = async () => {
@@ -175,15 +180,33 @@ const WardrobeScreen = () => {
   const processImage = async () => {
     if (!uploadState.originalImage) return;
 
-    setUploadState(prev => ({ ...prev, isProcessing: true }));
+    setUploadState(prev => ({ 
+      ...prev, 
+      isProcessing: true,
+      processingSteps: [
+        { name: 'Background Removal (Remove.bg)', status: 'pending', progress: 0 },
+        { name: 'Clothing Segmentation (Runway ML)', status: 'pending', progress: 0 },
+      ]
+    }));
 
     try {
-      const processedImageUri = await removeBackground(uploadState.originalImage);
-      setUploadState(prev => ({
-        ...prev,
-        processedImage: processedImageUri,
-        isProcessing: false,
-      }));
+      const result = await processImageWithAI(uploadState.originalImage);
+      
+      if (result.success && result.segmentedClothingUri) {
+        setUploadState(prev => ({
+          ...prev,
+          processedImage: result.segmentedClothingUri || null,
+          isProcessing: false,
+          processingSteps: result.steps,
+        }));
+      } else {
+        Alert.alert('Error', result.error || 'Failed to process image. Please try again.');
+        setUploadState(prev => ({ 
+          ...prev, 
+          isProcessing: false,
+          processingSteps: result.steps,
+        }));
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to process image. Please try again.');
       setUploadState(prev => ({ ...prev, isProcessing: false }));
@@ -217,6 +240,7 @@ const WardrobeScreen = () => {
       itemCategory: 'Tops',
       itemColor: '',
       itemDescription: '',
+      processingSteps: undefined,
     });
 
     Alert.alert('Success', 'Clothing item added to your wardrobe!');
@@ -388,7 +412,7 @@ const WardrobeScreen = () => {
 
               {!uploadState.processedImage && !uploadState.isProcessing && (
                 <Button
-                  title="Remove Background with AI"
+                  title="Process Image with AI (Background + Segmentation)"
                   onPress={processImage}
                   containerStyle={styles.processButton}
                   buttonStyle={styles.processButtonStyle}
@@ -399,8 +423,44 @@ const WardrobeScreen = () => {
                 <View style={styles.processingContainer}>
                   <ActivityIndicator size="large" color="#6366f1" />
                   <Text style={styles.processingText}>
-                    AI is removing background...
+                    AI is processing your image...
                   </Text>
+                  
+                  {uploadState.processingSteps && (
+                    <View style={styles.stepsContainer}>
+                      {uploadState.processingSteps.map((step, index) => (
+                        <View key={index} style={styles.stepItem}>
+                          <View style={styles.stepHeader}>
+                            <Text style={[
+                              styles.stepName,
+                              step.status === 'completed' && styles.stepCompleted,
+                              step.status === 'failed' && styles.stepFailed
+                            ]}>
+                              {step.name}
+                            </Text>
+                            <Text style={[
+                              styles.stepStatus,
+                              step.status === 'completed' && styles.stepCompleted,
+                              step.status === 'failed' && styles.stepFailed
+                            ]}>
+                              {step.status === 'pending' && '⏳'}
+                              {step.status === 'processing' && '🔄'}
+                              {step.status === 'completed' && '✅'}
+                              {step.status === 'failed' && '❌'}
+                            </Text>
+                          </View>
+                          {step.status === 'processing' && (
+                            <View style={styles.progressBar}>
+                              <View style={[styles.progressFill, { width: `${step.progress}%` }]} />
+                            </View>
+                          )}
+                          {step.error && (
+                            <Text style={styles.stepError}>{step.error}</Text>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
                 </View>
               )}
             </Card>
@@ -671,6 +731,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.7,
   },
+  stepsContainer: {
+    marginTop: 16,
+    width: '100%',
+  },
+  stepItem: {
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stepName: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  stepStatus: {
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  stepCompleted: {
+    color: '#10b981',
+  },
+  stepFailed: {
+    color: '#ef4444',
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#6366f1',
+    borderRadius: 2,
+  },
+  stepError: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginTop: 4,
+  },
   formCard: {
     margin: 16,
     borderRadius: 12,
@@ -704,6 +811,4 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
   },
-});
-
-export default WardrobeScreen; 
+}); 

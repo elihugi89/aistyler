@@ -1,0 +1,33 @@
+# TypeScript Rules
+
+## Code Quality
+- Use strict TypeScript configuration
+- Always define proper types and interfaces
+- Avoid `any` type - use proper typing instead
+- Use type guards when necessary
+- Prefer interfaces over types for object shapes
+- Use enums for constants with string values
+
+## Naming Conventions
+- Use PascalCase for interfaces and types
+- Use camelCase for variables and functions
+- Use UPPER_SNAKE_CASE for constants
+- Use descriptive names that explain purpose
+
+## Best Practices
+- Use optional chaining (`?.`) and nullish coalescing (`??`)
+- Prefer const assertions for readonly data
+- Use utility types like `Partial<T>`, `Pick<T>`, `Omit<T>`
+- Implement proper error handling with typed errors
+- Use generics for reusable components and functions
+
+## React Native Specific
+- Use proper typing for React Native components
+- Define prop interfaces for all components
+- Use proper typing for navigation props
+- Type async functions and API calls properly
+- Use proper typing for state management
+description:
+globs:
+alwaysApply: false
+---

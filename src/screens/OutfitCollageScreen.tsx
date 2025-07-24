@@ -24,7 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import ViewShot from 'react-native-view-shot';
-import AIService from '../services/AIService';
+import { AIService } from '../services/AIService';
 
 interface CollageItem {
   id: string;
