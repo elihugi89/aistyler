@@ -18,7 +18,6 @@ import {
   Divider,
 } from '@rneui/themed';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -35,26 +34,29 @@ export const HomeScreen = () => {
   
   // Animation values
   const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(50);
-  const scaleAnim = new Animated.Value(0.8);
+  const slideAnim = new Animated.Value(30);
+
+  // Daily fashion quote
+  const dailyQuotes = [
+    "Style is a way to say who you are without having to speak.",
+    "Fashion is the armor to survive the reality of everyday life.",
+    "Elegance is the only beauty that never fades.",
+    "Fashion is not something that exists in dresses only. Fashion is in the sky, in the street.",
+    "The best color in the whole world is the one that looks good on you."
+  ];
+  const [currentQuote] = useState(dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)]);
 
   useEffect(() => {
     // Animate elements on mount
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 1000,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
@@ -86,31 +88,31 @@ export const HomeScreen = () => {
     items: [
       { 
         id: '1', 
-        name: 'Navy Silk Wrap Dress', 
+        name: 'Silk Wrap Dress', 
         category: 'Dress', 
         color: 'Navy', 
-        imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop'
+        imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop'
       },
       { 
         id: '2', 
-        name: 'Silver Strappy Heels', 
+        name: 'Strappy Heels', 
         category: 'Shoes', 
         color: 'Silver', 
-        imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop'
+        imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=800&fit=crop'
       },
       { 
         id: '3', 
-        name: 'Pearl Drop Earrings', 
+        name: 'Pearl Earrings', 
         category: 'Accessories', 
         color: 'White', 
-        imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop'
+        imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=800&fit=crop'
       },
       { 
         id: '4', 
         name: 'Silver Clutch', 
         category: 'Accessories', 
         color: 'Silver', 
-        imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop'
+        imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop'
       },
     ],
     hairMakeup: 'Soft curls with natural glam look - bronze tones, nude lipstick',
@@ -124,46 +126,33 @@ export const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
-      {/* Hero Section with Gradient Background */}
-      <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.heroSection}
-      >
-        <Animated.View 
-          style={[
-            styles.heroContent,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
-          <View style={styles.logoContainer}>
-            <Ionicons name="sparkles" size={40} color="#ffffff" />
-          </View>
-          <Text style={styles.heroTitle}>AI Style Assistant</Text>
-          <Text style={styles.heroSubtitle}>
-            Your personal fashion stylist powered by AI
-          </Text>
-        </Animated.View>
-      </LinearGradient>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>AI STYLE ASSISTANT</Text>
+        <Text style={styles.headerSubtitle}>
+          Your personal fashion curator
+        </Text>
+      </View>
+
+      {/* Daily Quote */}
+      <View style={styles.quoteSection}>
+        <Text style={styles.quoteText}>"{currentQuote}"</Text>
+        <Text style={styles.quoteAuthor}>— Coco Chanel</Text>
+      </View>
 
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* AI Outfit Generator */}
         <View style={styles.aiSection}>
-          <Card containerStyle={styles.aiCard}>
-            <View style={styles.aiCardHeader}>
-              <Ionicons name="sparkles" size={24} color="#6366f1" />
-              <Text style={styles.aiCardTitle}>AI Outfit Generator</Text>
-            </View>
-            <Text style={styles.aiCardSubtitle}>
-              Describe your occasion and get personalized outfit suggestions
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>OUTFIT GENERATOR</Text>
+            <Text style={styles.sectionSubtitle}>
+              Describe your occasion and receive curated style suggestions
             </Text>
-            
+          </View>
+          
+          <View style={styles.inputSection}>
             <Input
               placeholder="e.g., 'I need an elegant outfit for an evening wedding'"
               value={searchQuery}
@@ -176,50 +165,46 @@ export const HomeScreen = () => {
             />
             
             <TouchableOpacity
-              style={styles.generateButton}
+              style={[
+                styles.generateButton,
+                isLoadingSuggestion && styles.generateButtonDisabled
+              ]}
               onPress={handleGetOutfitSuggestion}
               disabled={isLoadingSuggestion}
             >
-              <LinearGradient
-                colors={['#6366f1', '#8b5cf6']}
-                style={styles.generateButtonGradient}
-              >
-                {isLoadingSuggestion ? (
-                  <View style={styles.loadingContainer}>
-                    <Ionicons name="refresh" size={20} color="#ffffff" style={styles.spinning} />
-                    <Text style={styles.generateButtonText}>Creating your outfit...</Text>
-                  </View>
-                ) : (
-                  <>
-                    <Ionicons name="sparkles" size={20} color="#ffffff" />
-                    <Text style={styles.generateButtonText}>Generate Outfit</Text>
-                  </>
-                )}
-              </LinearGradient>
+              {isLoadingSuggestion ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.generateButtonText}>PROCESSING...</Text>
+                </View>
+              ) : (
+                <Text style={styles.generateButtonText}>GENERATE OUTFIT</Text>
+              )}
             </TouchableOpacity>
-          </Card>
+          </View>
         </View>
 
         {/* Outfit Suggestion */}
         {showSuggestions && (
-          <View style={styles.suggestionContainer}>
-            <Card containerStyle={styles.suggestionCard}>
+          <Animated.View 
+            style={[
+              styles.suggestionContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <View style={styles.suggestionCard}>
               <View style={styles.suggestionHeader}>
                 <Text style={styles.suggestionTitle}>{outfitSuggestion.title}</Text>
-                <View style={styles.ratingContainer}>
-                  {[...Array(5)].map((_, i) => (
-                    <Ionicons 
-                      key={i} 
-                      name="star" 
-                      size={16} 
-                      color={i < outfitSuggestion.rating ? "#fbbf24" : "#e5e7eb"} 
-                    />
-                  ))}
+                <View style={styles.occasionBadge}>
+                  <Text style={styles.occasionText}>{outfitSuggestion.occasion}</Text>
                 </View>
               </View>
               
-              {/* Outfit Preview Collage */}
+              {/* Outfit Preview */}
               <View style={styles.outfitPreview}>
+                <Text style={styles.previewLabel}>COMPLETE LOOK</Text>
                 <View style={styles.outfitPreviewGrid}>
                   {outfitSuggestion.items.slice(0, 4).map((item, index) => (
                     <View key={item.id} style={[styles.previewItem, { zIndex: 4 - index }]}>
@@ -231,11 +216,11 @@ export const HomeScreen = () => {
                     </View>
                   ))}
                 </View>
-                <Text style={styles.previewText}>Complete Outfit Look</Text>
               </View>
 
               {/* Outfit Items */}
               <View style={styles.outfitItems}>
+                <Text style={styles.itemsLabel}>PIECES</Text>
                 {outfitSuggestion.items.map((item) => (
                   <View key={item.id} style={styles.outfitItem}>
                     <View style={styles.itemImageContainer}>
@@ -244,13 +229,11 @@ export const HomeScreen = () => {
                         style={styles.itemImage}
                         resizeMode="cover"
                       />
-                      <View style={styles.categoryBadge}>
-                        <Text style={styles.categoryBadgeText}>{item.category}</Text>
-                      </View>
                     </View>
                     <View style={styles.itemInfo}>
                       <Text style={styles.itemName}>{item.name}</Text>
                       <Text style={styles.itemColor}>{item.color}</Text>
+                      <Text style={styles.itemCategory}>{item.category}</Text>
                     </View>
                   </View>
                 ))}
@@ -258,24 +241,16 @@ export const HomeScreen = () => {
 
               {/* Hair & Makeup */}
               <View style={styles.hairMakeupSection}>
-                <View style={styles.sectionHeader}>
-                  <Ionicons name="cut" size={20} color="#f59e0b" />
-                  <Text style={styles.sectionTitle}>Hair & Makeup</Text>
-                </View>
+                <Text style={styles.sectionLabel}>HAIR & MAKEUP</Text>
                 <Text style={styles.hairMakeupText}>{outfitSuggestion.hairMakeup}</Text>
               </View>
 
               {/* Styling Tips */}
               <View style={styles.tipsSection}>
-                <View style={styles.sectionHeader}>
-                  <Ionicons name="bulb" size={20} color="#10b981" />
-                  <Text style={styles.sectionTitle}>Styling Tips</Text>
-                </View>
+                <Text style={styles.sectionLabel}>STYLING NOTES</Text>
                 {outfitSuggestion.tips.map((tip, index) => (
                   <View key={index} style={styles.tipContainer}>
-                    <View style={styles.tipIcon}>
-                      <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                    </View>
+                    <Text style={styles.tipNumber}>{String(index + 1).padStart(2, '0')}</Text>
                     <Text style={styles.tipText}>{tip}</Text>
                   </View>
                 ))}
@@ -284,24 +259,40 @@ export const HomeScreen = () => {
               {/* Actions */}
               <View style={styles.suggestionActions}>
                 <TouchableOpacity style={styles.saveButton}>
-                  <LinearGradient
-                    colors={['#10b981', '#059669']}
-                    style={styles.saveButtonGradient}
-                  >
-                    <Ionicons name="bookmark" size={16} color="#ffffff" />
-                    <Text style={styles.saveButtonText}>Save Outfit</Text>
-                  </LinearGradient>
+                  <Text style={styles.saveButtonText}>SAVE OUTFIT</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.tryAgainButton}
                   onPress={() => setShowSuggestions(false)}
                 >
-                  <Text style={styles.tryAgainText}>Try Again</Text>
+                  <Text style={styles.tryAgainText}>GENERATE NEW</Text>
                 </TouchableOpacity>
               </View>
-            </Card>
-          </View>
+            </View>
+          </Animated.View>
         )}
+
+        {/* Quick Actions */}
+        <View style={styles.quickActionsSection}>
+          <Text style={styles.sectionTitle}>QUICK ACCESS</Text>
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => navigation.navigate('Wardrobe' as never)}
+            >
+              <Text style={styles.quickActionTitle}>WARDROBE</Text>
+              <Text style={styles.quickActionSubtitle}>Manage your pieces</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => navigation.navigate('Upload' as never)}
+            >
+              <Text style={styles.quickActionTitle}>ADD ITEM</Text>
+              <Text style={styles.quickActionSubtitle}>Upload new pieces</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -310,134 +301,119 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
   },
-  heroSection: {
-    height: height * 0.35,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 50,
-  },
-  heroContent: {
-    alignItems: 'center',
+  header: {
+    paddingTop: 60,
     paddingHorizontal: 20,
+    paddingBottom: 30,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  heroTitle: {
+  headerTitle: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginBottom: 10,
+    fontWeight: '300',
+    color: '#000000',
+    letterSpacing: 3,
+    marginBottom: 8,
   },
-  heroSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '300',
+    letterSpacing: 1,
+  },
+  quoteSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    backgroundColor: '#fafafa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  quoteText: {
+    fontSize: 18,
+    fontWeight: '300',
+    color: '#000000',
+    fontStyle: 'italic',
+    lineHeight: 26,
+    marginBottom: 12,
     textAlign: 'center',
-    lineHeight: 24,
+  },
+  quoteAuthor: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '400',
+    letterSpacing: 1,
+    textAlign: 'center',
   },
   scrollContent: {
     flex: 1,
-    marginTop: -30,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    backgroundColor: '#f8fafc',
-    paddingTop: 30,
   },
   aiSection: {
-    paddingHorizontal: 20,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sectionHeader: {
     marginBottom: 30,
   },
-  aiCard: {
-    borderRadius: 20,
-    padding: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 2,
+    marginBottom: 8,
   },
-  aiCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  aiCardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginLeft: 10,
-  },
-  aiCardSubtitle: {
+  sectionSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 20,
+    color: '#666666',
+    fontWeight: '300',
     lineHeight: 20,
+  },
+  inputSection: {
+    marginBottom: 20,
   },
   inputContainer: {
     marginBottom: 20,
   },
   inputText: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#1f2937',
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: '300',
   },
   inputContainerStyle: {
-    borderBottomWidth: 0,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingHorizontal: 0,
+    paddingVertical: 12,
   },
   generateButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  generateButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    backgroundColor: '#000000',
+    alignItems: 'center',
+  },
+  generateButtonDisabled: {
+    backgroundColor: '#e0e0e0',
   },
   generateButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
     color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    letterSpacing: 1,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  spinning: {
-    transform: [{ rotate: '360deg' }],
+    justifyContent: 'center',
   },
   suggestionContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    padding: 20,
   },
   suggestionCard: {
-    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
     padding: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
   },
   suggestionHeader: {
     flexDirection: 'row',
@@ -447,164 +423,186 @@ const styles = StyleSheet.create({
   },
   suggestionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
     flex: 1,
   },
-  ratingContainer: {
-    flexDirection: 'row',
+  occasionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#f0f0f0',
+  },
+  occasionText: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
   },
   outfitPreview: {
-    alignItems: 'center',
-    marginVertical: 20,
+    marginBottom: 30,
+  },
+  previewLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+    marginBottom: 12,
   },
   outfitPreviewGrid: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
+    height: 120,
   },
   previewItem: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginHorizontal: -8,
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    flex: 1,
+    marginHorizontal: 2,
   },
   previewImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 27,
-  },
-  previewText: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontStyle: 'italic',
+    backgroundColor: '#f8f8f8',
   },
   outfitItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 30,
+  },
+  itemsLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+    marginBottom: 16,
   },
   outfitItem: {
-    width: '48%',
-    marginBottom: 15,
+    flexDirection: 'row',
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   itemImageContainer: {
-    position: 'relative',
-    width: '100%',
-    height: 100,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 8,
+    width: 60,
+    height: 80,
+    backgroundColor: '#f8f8f8',
+    marginRight: 16,
   },
   itemImage: {
     width: '100%',
     height: '100%',
   },
-  categoryBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  categoryBadgeText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-  },
   itemInfo: {
-    paddingHorizontal: 4,
+    flex: 1,
+    justifyContent: 'center',
   },
   itemName: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#000000',
     marginBottom: 4,
-    color: '#1f2937',
   },
   itemColor: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '300',
+    marginBottom: 2,
+  },
+  itemCategory: {
     fontSize: 10,
-    color: '#6b7280',
+    color: '#999999',
+    fontWeight: '300',
+    letterSpacing: 0.5,
   },
   hairMakeupSection: {
-    marginBottom: 20,
+    marginBottom: 30,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginLeft: 8,
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+    marginBottom: 12,
   },
   hairMakeupText: {
     fontSize: 14,
-    fontStyle: 'italic',
-    color: '#6b7280',
+    color: '#000000',
+    fontWeight: '300',
     lineHeight: 20,
   },
   tipsSection: {
-    marginBottom: 20,
+    marginBottom: 30,
   },
   tipContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  tipIcon: {
-    marginRight: 8,
-    marginTop: 2,
+  tipNumber: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#000000',
+    marginRight: 12,
+    minWidth: 20,
   },
   tipText: {
     fontSize: 14,
-    flex: 1,
-    color: '#6b7280',
+    color: '#000000',
+    fontWeight: '300',
     lineHeight: 20,
+    flex: 1,
   },
   suggestionActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 12,
   },
   saveButton: {
     flex: 1,
-    marginRight: 10,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  saveButtonGradient: {
-    flexDirection: 'row',
+    paddingVertical: 16,
+    backgroundColor: '#000000',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
   },
   saveButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
     color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+    letterSpacing: 1,
   },
   tryAgainButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    flex: 1,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
   },
   tryAgainText: {
-    color: '#6366f1',
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
+  },
+  quickActionsSection: {
+    padding: 20,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  quickActionCard: {
+    flex: 1,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    backgroundColor: '#ffffff',
+  },
+  quickActionTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  quickActionSubtitle: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '300',
   },
 }); 
