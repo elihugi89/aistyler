@@ -8,6 +8,8 @@ import {
   Image,
   Modal,
   ActivityIndicator,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import {
   Text,
@@ -24,6 +26,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { theme } from '../theme';
 import AIService from '../services/AIService';
+
+const { width, height } = Dimensions.get('window');
 
 interface ClothingItem {
   id: string;
@@ -50,35 +54,51 @@ export const WardrobeScreen = () => {
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([
     {
       id: '1',
-      name: 'Navy Silk Wrap Dress',
+      name: 'Silk Wrap Dress',
       category: 'Dresses',
       color: 'Navy',
-      imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop',
+      imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop',
       description: 'Elegant silk wrap dress perfect for formal occasions',
     },
     {
       id: '2',
-      name: 'Silver Strappy Heels',
+      name: 'Strappy Heels',
       category: 'Shoes',
       color: 'Silver',
-      imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop',
+      imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=800&fit=crop',
       description: 'Classic strappy heels for evening wear',
     },
     {
       id: '3',
-      name: 'Pearl Drop Earrings',
+      name: 'Pearl Earrings',
       category: 'Accessories',
       color: 'White',
-      imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop',
+      imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=800&fit=crop',
       description: 'Timeless pearl earrings for elegant looks',
     },
     {
       id: '4',
-      name: 'Black Blazer',
+      name: 'Tailored Blazer',
       category: 'Outerwear',
       color: 'Black',
-      imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop',
+      imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop',
       description: 'Professional blazer for business meetings',
+    },
+    {
+      id: '5',
+      name: 'Cashmere Sweater',
+      category: 'Tops',
+      color: 'Cream',
+      imageUri: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop',
+      description: 'Luxurious cashmere sweater for everyday elegance',
+    },
+    {
+      id: '6',
+      name: 'Wide-Leg Trousers',
+      category: 'Bottoms',
+      color: 'Charcoal',
+      imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop',
+      description: 'Sophisticated wide-leg trousers for professional settings',
     },
   ]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -113,24 +133,27 @@ export const WardrobeScreen = () => {
   };
 
   const pickImage = async () => {
-    Alert.alert(
-      'Add Clothing Item',
-      'Choose how you want to add your clothing item:',
-      [
-        {
-          text: 'Take Photo',
-          onPress: () => takePhoto(),
-        },
-        {
-          text: 'Choose from Library',
-          onPress: () => selectFromLibrary(),
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ]
-    );
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant camera roll permissions to add clothing items.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.9,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setUploadState(prev => ({
+        ...prev,
+        originalImage: result.assets[0].uri,
+        showPreview: true,
+      }));
+    }
   };
 
   const takePhoto = async () => {
@@ -144,8 +167,8 @@ export const WardrobeScreen = () => {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+      aspect: [3, 4],
+      quality: 0.9,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -158,27 +181,7 @@ export const WardrobeScreen = () => {
   };
 
   const selectFromLibrary = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions to add clothing items.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setUploadState(prev => ({
-        ...prev,
-        originalImage: result.assets[0].uri,
-        showPreview: true,
-      }));
-    }
+    await pickImage();
   };
 
   const processImage = async () => {
@@ -212,8 +215,8 @@ export const WardrobeScreen = () => {
   };
 
   const saveItem = () => {
-    if (!uploadState.itemName.trim() || !uploadState.processedImage) {
-      Alert.alert('Error', 'Please fill in all required fields and process the image.');
+    if (!uploadState.processedImage || !uploadState.itemName.trim()) {
+      Alert.alert('Error', 'Please provide an image and item name.');
       return;
     }
 
@@ -227,8 +230,6 @@ export const WardrobeScreen = () => {
     };
 
     setClothingItems(prev => [...prev, newItem]);
-    
-    // Reset upload state
     setUploadState({
       originalImage: null,
       processedImage: null,
@@ -238,22 +239,9 @@ export const WardrobeScreen = () => {
       itemCategory: 'Tops',
       itemColor: '',
       itemDescription: '',
-
     });
 
     Alert.alert('Success', 'Clothing item added to your wardrobe!');
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'Tops': return 'shirt-outline';
-      case 'Bottoms': return 'shirt-outline';
-      case 'Dresses': return 'female-outline';
-      case 'Shoes': return 'footsteps-outline';
-      case 'Accessories': return 'diamond-outline';
-      case 'Outerwear': return 'shirt-outline';
-      default: return 'shirt-outline';
-    }
   };
 
   const filteredItems = selectedCategory === 'All' 
@@ -261,104 +249,78 @@ export const WardrobeScreen = () => {
     : clothingItems.filter(item => item.category === selectedCategory);
 
   return (
-    <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text h4 style={styles.headerTitle}>My Digital Closet</Text>
-          <Text style={styles.headerSubtitle}>
-            {clothingItems.length} items in your wardrobe
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>WARDROBE</Text>
+        <Text style={styles.headerSubtitle}>
+          {clothingItems.length} items
+        </Text>
+      </View>
 
-        <View style={styles.categoriesContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {categories.map((category) => (
-              <Chip
-                key={category}
-                title={category}
-                type={selectedCategory === category ? 'solid' : 'outline'}
-                onPress={() => setSelectedCategory(category)}
-                containerStyle={styles.categoryChip}
-              />
-            ))}
-          </ScrollView>
-        </View>
+      {/* Category Filter */}
+      <View style={styles.categoryContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryButton,
+                selectedCategory === category && styles.categoryButtonActive
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text style={[
+                styles.categoryText,
+                selectedCategory === category && styles.categoryTextActive
+              ]}>
+                {category.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
-        <View style={styles.itemsContainer}>
+      {/* Items Grid */}
+      <ScrollView style={styles.itemsContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.itemsGrid}>
           {filteredItems.map((item) => (
-            <View key={item.id} style={styles.itemWrapper}>
-              <TouchableOpacity style={styles.itemCard} onPress={() => Alert.alert('Item Details', item.name)}>
-                <View style={styles.itemImageContainer}>
-                  {item.imageUri ? (
-                    <Image
-                      source={{ uri: item.imageUri }}
-                      style={styles.itemImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={styles.placeholderImage}>
-                      <Icon
-                        name={getCategoryIcon(item.category)}
-                        type="ionicon"
-                        size={24}
-                        color="#6366f1"
-                      />
-                    </View>
-                  )}
-                  <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryBadgeText}>{item.category}</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                  <Text style={styles.itemColor}>{item.color}</Text>
-                </View>
-
-                <View style={styles.itemActions}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => Alert.alert('Edit', `Edit ${item.name}`)}
-                  >
-                    <Ionicons name="create-outline" size={16} color="#6366f1" />
+            <View key={item.id} style={styles.itemCard}>
+              <View style={styles.itemImageContainer}>
+                <Image
+                  source={{ uri: item.imageUri }}
+                  style={styles.itemImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.itemOverlay}>
+                  <TouchableOpacity style={styles.itemActionButton}>
+                    <Ionicons name="create-outline" size={16} color="#000000" />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => Alert.alert('Delete', `Delete ${item.name}`)}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  <TouchableOpacity style={styles.itemActionButton}>
+                    <Ionicons name="trash-outline" size={16} color="#000000" />
                   </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
+              </View>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemColor}>{item.color}</Text>
+              </View>
             </View>
           ))}
         </View>
-
-        {filteredItems.length === 0 && (
-          <Card containerStyle={styles.emptyCard}>
-            <View style={styles.emptyContent}>
-              <Ionicons name="shirt-outline" size={64} color="#6366f1" />
-              <Text h4 style={styles.emptyTitle}>No items found</Text>
-              <Text style={styles.emptyText}>
-                Add some clothing items to your digital closet to get started!
-              </Text>
-              <View style={styles.emptyInstructions}>
-                <Text style={styles.instructionText}>
-                  📸 Tap the camera button to take a photo or choose from your library
-                </Text>
-                <Text style={styles.instructionText}>
-                  🤖 AI will automatically remove the background
-                </Text>
-                <Text style={styles.instructionText}>
-                  ✨ Add details and save to your wardrobe
-                </Text>
-              </View>
-            </View>
-          </Card>
-        )}
       </ScrollView>
 
-      {/* Upload Preview Modal */}
+      {/* Add Item FAB */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setUploadState(prev => ({ ...prev, showPreview: true }))}
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+
+      {/* Upload Modal */}
       <Modal
         visible={uploadState.showPreview}
         animationType="slide"
@@ -366,28 +328,23 @@ export const WardrobeScreen = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <View style={styles.modalTitleContainer}>
-              <Text h4 style={styles.modalTitle}>Add New Item</Text>
-              <Text style={styles.modalSubtitle}>
-                {uploadState.originalImage?.includes('Camera') ? '📸 Photo taken' : '📁 From library'}
-              </Text>
-            </View>
             <TouchableOpacity
-              onPress={() => setUploadState(prev => ({ ...prev, showPreview: false }))}
               style={styles.closeButton}
+              onPress={() => setUploadState(prev => ({ ...prev, showPreview: false }))}
             >
-              <Ionicons name="close" size={24} color="#000" />
+              <Text style={styles.closeButtonText}>CLOSE</Text>
             </TouchableOpacity>
+            <Text style={styles.modalTitle}>ADD ITEM</Text>
+            <View style={styles.placeholder} />
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* Image Preview Section */}
-            <Card containerStyle={styles.previewCard}>
-              <Card.Title>Image Preview</Card.Title>
+            <View style={styles.previewSection}>
               <View style={styles.imagePreviewContainer}>
                 {uploadState.originalImage && (
                   <View style={styles.imageSection}>
-                    <Text style={styles.imageLabel}>Original</Text>
+                    <Text style={styles.imageLabel}>ORIGINAL</Text>
                     <Image
                       source={{ uri: uploadState.originalImage }}
                       style={styles.previewImage}
@@ -398,7 +355,7 @@ export const WardrobeScreen = () => {
                 
                 {uploadState.processedImage && (
                   <View style={styles.imageSection}>
-                    <Text style={styles.imageLabel}>Background Removed</Text>
+                    <Text style={styles.imageLabel}>PROCESSED</Text>
                     <Image
                       source={{ uri: uploadState.processedImage }}
                       style={styles.previewImage}
@@ -409,57 +366,75 @@ export const WardrobeScreen = () => {
               </View>
 
               {!uploadState.processedImage && !uploadState.isProcessing && (
-                <Button
-                  title="Process Image with AI (Background + Segmentation)"
-                  onPress={processImage}
-                  containerStyle={styles.processButton}
-                  buttonStyle={styles.processButtonStyle}
-                />
+                <View style={styles.uploadActions}>
+                  <TouchableOpacity style={styles.uploadButton} onPress={takePhoto}>
+                    <Text style={styles.uploadButtonText}>TAKE PHOTO</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.uploadButton} onPress={selectFromLibrary}>
+                    <Text style={styles.uploadButtonText}>SELECT FROM LIBRARY</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {!uploadState.processedImage && !uploadState.isProcessing && uploadState.originalImage && (
+                <TouchableOpacity style={styles.processButton} onPress={processImage}>
+                  <Text style={styles.processButtonText}>PROCESS IMAGE</Text>
+                </TouchableOpacity>
               )}
 
               {uploadState.isProcessing && (
                 <View style={styles.processingContainer}>
-                  <ActivityIndicator size="large" color="#6366f1" />
+                  <ActivityIndicator size="large" color="#000000" />
                   <Text style={styles.processingText}>
-                    AI is processing your image...
+                    Processing image...
                   </Text>
-                  
-
                 </View>
               )}
-            </Card>
+            </View>
 
             {/* Item Details Form */}
-            <Card containerStyle={styles.formCard}>
-              <Card.Title>Item Details</Card.Title>
+            <View style={styles.formSection}>
+              <Text style={styles.formTitle}>ITEM DETAILS</Text>
               
               <Input
-                placeholder="Item name (e.g., Blue Silk Blouse)"
+                placeholder="Item name"
                 value={uploadState.itemName}
                 onChangeText={(text) => setUploadState(prev => ({ ...prev, itemName: text }))}
                 containerStyle={styles.inputContainer}
+                inputStyle={styles.inputText}
+                inputContainerStyle={styles.inputContainerStyle}
               />
 
-              <View style={styles.categoryContainer}>
-                <Text style={styles.inputLabel}>Category</Text>
+              <View style={styles.categoryFormContainer}>
+                <Text style={styles.inputLabel}>CATEGORY</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {categories.slice(1).map((category) => (
-                    <Chip
+                    <TouchableOpacity
                       key={category}
-                      title={category}
-                      type={uploadState.itemCategory === category ? 'solid' : 'outline'}
+                      style={[
+                        styles.categoryFormButton,
+                        uploadState.itemCategory === category && styles.categoryFormButtonActive
+                      ]}
                       onPress={() => setUploadState(prev => ({ ...prev, itemCategory: category }))}
-                      containerStyle={styles.categoryChipForm}
-                    />
+                    >
+                      <Text style={[
+                        styles.categoryFormText,
+                        uploadState.itemCategory === category && styles.categoryFormTextActive
+                      ]}>
+                        {category.toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
                   ))}
                 </ScrollView>
               </View>
 
               <Input
-                placeholder="Color (e.g., Navy, Black, White)"
+                placeholder="Color"
                 value={uploadState.itemColor}
                 onChangeText={(text) => setUploadState(prev => ({ ...prev, itemColor: text }))}
                 containerStyle={styles.inputContainer}
+                inputStyle={styles.inputText}
+                inputContainerStyle={styles.inputContainerStyle}
               />
 
               <Input
@@ -469,30 +444,27 @@ export const WardrobeScreen = () => {
                 multiline
                 numberOfLines={3}
                 containerStyle={styles.inputContainer}
+                inputStyle={styles.inputText}
+                inputContainerStyle={styles.inputContainerStyle}
               />
-            </Card>
+            </View>
           </ScrollView>
 
           {/* Save Button */}
           <View style={styles.modalFooter}>
-            <Button
-              title="Save to Wardrobe"
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                (!uploadState.processedImage || !uploadState.itemName.trim()) && styles.saveButtonDisabled
+              ]}
               onPress={saveItem}
               disabled={!uploadState.processedImage || !uploadState.itemName.trim()}
-              containerStyle={styles.saveButton}
-              buttonStyle={styles.saveButtonStyle}
-            />
+            >
+              <Text style={styles.saveButtonText}>SAVE ITEM</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <FAB
-        icon={{ name: 'camera', color: 'white' }}
-        color="#6366f1"
-        placement="right"
-        onPress={pickImage}
-        title="Add Item"
-      />
     </View>
   );
 };
@@ -500,130 +472,126 @@ export const WardrobeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   header: {
-    padding: 20,
-    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   headerTitle: {
-    marginBottom: 5,
+    fontSize: 28,
+    fontWeight: '300',
+    color: '#000000',
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   headerSubtitle: {
-    opacity: 0.7,
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '300',
+    letterSpacing: 1,
   },
-  categoriesContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
+  categoryContainer: {
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  categoryChip: {
-    marginRight: 8,
+  categoryScroll: {
+    paddingHorizontal: 20,
+  },
+  categoryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginRight: 15,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
+  },
+  categoryButtonActive: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+  },
+  categoryTextActive: {
+    color: '#ffffff',
   },
   itemsContainer: {
-    paddingHorizontal: 16,
+    flex: 1,
+  },
+  itemsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  itemWrapper: {
-    width: '31%',
-    marginBottom: 16,
+    padding: 10,
   },
   itemCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 0,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: (width - 30) / 2,
+    marginBottom: 30,
+    marginHorizontal: 5,
   },
   itemImageContainer: {
     position: 'relative',
     width: '100%',
-    height: 120,
+    height: (width - 30) / 2 * 1.4,
+    backgroundColor: '#f8f8f8',
+    marginBottom: 12,
   },
   itemImage: {
     width: '100%',
     height: '100%',
   },
-  placeholderImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f8f9fa',
+  itemOverlay: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  itemActionButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  categoryBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  categoryBadgeText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-  },
   itemInfo: {
-    padding: 8,
+    paddingHorizontal: 4,
   },
   itemName: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#000000',
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
   itemColor: {
-    fontSize: 10,
-    opacity: 0.7,
-    marginBottom: 4,
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '300',
+    letterSpacing: 0.5,
   },
-  itemDescription: {
-    fontSize: 14,
-    opacity: 0.8,
-    lineHeight: 20,
-  },
-  itemActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-  },
-  actionButton: {
-    padding: 4,
-  },
-  emptyCard: {
-    margin: 16,
-    borderRadius: 12,
-  },
-  emptyContent: {
+  addButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
   },
-  emptyTitle: {
-    marginTop: 16,
-    marginBottom: 8,
+  addButtonText: {
+    fontSize: 24,
+    color: '#ffffff',
+    fontWeight: '300',
   },
-  emptyText: {
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  emptyInstructions: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-  },
-  instructionText: {
-    textAlign: 'center',
-    fontSize: 14,
-    opacity: 0.6,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  // Modal Styles
   modalContainer: {
     flex: 1,
     backgroundColor: '#ffffff',
@@ -632,147 +600,171 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  modalTitle: {
-    flex: 1,
-  },
-  modalTitleContainer: {
-    flex: 1,
-  },
-  modalSubtitle: {
-    fontSize: 12,
-    opacity: 0.6,
-    marginTop: 2,
+    borderBottomColor: '#f0f0f0',
   },
   closeButton: {
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  closeButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
+  },
+  placeholder: {
+    width: 60,
   },
   modalContent: {
     flex: 1,
   },
-  previewCard: {
-    margin: 16,
-    borderRadius: 12,
+  previewSection: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   imagePreviewContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
+    gap: 20,
+    marginBottom: 20,
   },
   imageSection: {
-    alignItems: 'center',
     flex: 1,
   },
   imageLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
     marginBottom: 8,
-    opacity: 0.7,
+    letterSpacing: 1,
   },
   previewImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f8f8f8',
+  },
+  uploadActions: {
+    flexDirection: 'row',
+    gap: 15,
+    marginBottom: 20,
+  },
+  uploadButton: {
+    flex: 1,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#000000',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+  },
+  uploadButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
   },
   processButton: {
-    marginTop: 8,
+    paddingVertical: 16,
+    backgroundColor: '#000000',
+    alignItems: 'center',
   },
-  processButtonStyle: {
-    backgroundColor: '#6366f1',
-    borderRadius: 8,
+  processButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   processingContainer: {
     alignItems: 'center',
-    padding: 20,
+    paddingVertical: 20,
   },
   processingText: {
-    marginTop: 12,
-    fontSize: 16,
-    opacity: 0.7,
-  },
-  stepsContainer: {
-    marginTop: 16,
-    width: '100%',
-  },
-  stepItem: {
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-  },
-  stepHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  stepName: {
     fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
+    color: '#666666',
+    marginTop: 12,
+    fontWeight: '300',
   },
-  stepStatus: {
+  formSection: {
+    padding: 20,
+  },
+  formTitle: {
     fontSize: 16,
-    marginLeft: 8,
-  },
-  stepCompleted: {
-    color: '#10b981',
-  },
-  stepFailed: {
-    color: '#ef4444',
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#6366f1',
-    borderRadius: 2,
-  },
-  stepError: {
-    fontSize: 12,
-    color: '#ef4444',
-    marginTop: 4,
-  },
-  formCard: {
-    margin: 16,
-    borderRadius: 12,
+    fontWeight: '400',
+    color: '#000000',
+    marginBottom: 20,
+    letterSpacing: 1,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  categoryContainer: {
-    marginBottom: 16,
+  inputText: {
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: '300',
+  },
+  inputContainerStyle: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
+  },
+  categoryFormContainer: {
+    marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    opacity: 0.7,
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    marginBottom: 12,
+    letterSpacing: 1,
   },
-  categoryChipForm: {
-    marginRight: 8,
-    marginBottom: 8,
+  categoryFormButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
+    marginRight: 10,
+  },
+  categoryFormButtonActive: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  categoryFormText: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+  },
+  categoryFormTextActive: {
+    color: '#ffffff',
   },
   modalFooter: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#f0f0f0',
   },
   saveButton: {
-    width: '100%',
+    paddingVertical: 16,
+    backgroundColor: '#000000',
+    alignItems: 'center',
   },
-  saveButtonStyle: {
-    backgroundColor: '#6366f1',
-    borderRadius: 12,
-    paddingVertical: 12,
+  saveButtonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  saveButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
 }); 
