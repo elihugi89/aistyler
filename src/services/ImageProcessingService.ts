@@ -2,7 +2,6 @@
 // Handles Remove.bg background removal + Runway ML clothing segmentation
 
 import { removeBgService, RemoveBgResponse } from './RemoveBgService';
-import { runwayMLService, RunwayMLResponse } from './RunwayMLService';
 
 export interface ProcessingStep {
   name: string;
@@ -29,11 +28,7 @@ class ImageProcessingService {
         status: 'pending',
         progress: 0,
       },
-      {
-        name: 'Clothing Segmentation (Runway ML)',
-        status: 'pending',
-        progress: 0,
-      },
+      // Removed clothing segmentation step
     ];
 
     try {
@@ -43,9 +38,14 @@ class ImageProcessingService {
       
       const removeBgResult: RemoveBgResponse = await removeBgService.removeBackground(imageUri);
       
+      console.log('RemoveBgService complete response:', JSON.stringify(removeBgResult, null, 2));
+      console.log('RemoveBgResult success:', removeBgResult.success);
+      console.log('RemoveBgResult processedImageUri:', removeBgResult.processedImageUri);
+      
       if (!removeBgResult.success) {
         steps[0].status = 'failed';
         steps[0].error = removeBgResult.error;
+        console.log('RemoveBg failed with error:', removeBgResult.error);
         return {
           success: false,
           originalImageUri: imageUri,
@@ -57,34 +57,12 @@ class ImageProcessingService {
       steps[0].status = 'completed';
       steps[0].progress = 100;
 
-      // Step 2: Apply clothing segmentation using Runway ML
-      steps[1].status = 'processing';
-      steps[1].progress = 25;
-
-      const runwayMLResult: RunwayMLResponse = await runwayMLService.segmentClothing(
-        removeBgResult.processedImageUri!
-      );
-
-      if (!runwayMLResult.success) {
-        steps[1].status = 'failed';
-        steps[1].error = runwayMLResult.error;
-        return {
-          success: false,
-          originalImageUri: imageUri,
-          backgroundRemovedUri: removeBgResult.processedImageUri,
-          steps,
-          error: `Clothing segmentation failed: ${runwayMLResult.error}`,
-        };
-      }
-
-      steps[1].status = 'completed';
-      steps[1].progress = 100;
-
+      console.log('ImageProcessingService returning success with backgroundRemovedUri:', removeBgResult.processedImageUri);
+      
       return {
         success: true,
         originalImageUri: imageUri,
         backgroundRemovedUri: removeBgResult.processedImageUri,
-        segmentedClothingUri: runwayMLResult.segmentedImageUri,
         steps,
       };
 
@@ -132,19 +110,18 @@ class ImageProcessingService {
     };
   }
 
-  // Validate both API keys
+  // Validate API keys
   async validateAPIs(): Promise<{
     removeBgValid: boolean;
-    runwayMLValid: boolean;
   }> {
-    const [removeBgValid, runwayMLValid] = await Promise.all([
-      removeBgService.validateApiKey(),
-      runwayMLService.validateApiKey(),
-    ]);
+    const removeBgValid = await removeBgService.validateApiKey();
+
+    if (!removeBgValid) {
+      throw new Error('Remove.bg API key is invalid.');
+    }
 
     return {
       removeBgValid,
-      runwayMLValid,
     };
   }
 }

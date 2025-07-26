@@ -4,12 +4,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
 import { LoadingScreen } from '../components/LoadingScreen';
-import { aiService } from '../services/AIService';
+import AIService from '../services/AIService';
 
 export const UploadScreen = () => {
   const [image, setImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingResult, setProcessingResult] = useState<any>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -21,7 +22,7 @@ export const UploadScreen = () => {
 
     if (!result.canceled && result.assets[0]) {
       setImage(result.assets[0].uri);
-      analyzeImage(result.assets[0].uri);
+      await processBackgroundRemoval(result.assets[0].uri);
     }
   };
 
@@ -34,6 +35,7 @@ export const UploadScreen = () => {
     }
 
     const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -41,24 +43,57 @@ export const UploadScreen = () => {
 
     if (!result.canceled && result.assets[0]) {
       setImage(result.assets[0].uri);
-      analyzeImage(result.assets[0].uri);
+      await processBackgroundRemoval(result.assets[0].uri);
     }
   };
 
-  const analyzeImage = async (imageUri: string) => {
+  const processBackgroundRemoval = async (imageUri: string) => {
     try {
-      setIsAnalyzing(true);
-      const analysis = await aiService.analyzeImage(imageUri);
-      setAnalysisResult(analysis);
+      setIsProcessing(true);
+      console.log('Starting automatic background removal for:', imageUri);
+      
+      const processedImageUri = await AIService.removeBackground(imageUri);
+      console.log('Background removal completed successfully!');
+      console.log('Processed image URI:', processedImageUri);
+      
+      setProcessedImage(processedImageUri);
+      setProcessingResult({
+        success: true,
+        originalImageUri: imageUri,
+        backgroundRemovedUri: processedImageUri,
+        steps: [
+          {
+            name: 'Background Removal',
+            status: 'completed',
+            progress: 100,
+          }
+        ]
+      });
     } catch (error) {
-      console.error('Error analyzing image:', error);
-      alert('Failed to analyze image. Please try again.');
+      console.error('Error processing background removal:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      // Provide more specific error messages
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        if (error.message.includes('API')) {
+          errorMessage = 'API service error. Please check your internet connection and try again.';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('permission')) {
+          errorMessage = 'Permission denied. Please check app permissions.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      alert(`Failed to process image: ${errorMessage}`);
     } finally {
-      setIsAnalyzing(false);
+      setIsProcessing(false);
     }
   };
 
-  if (isAnalyzing) {
+  if (isProcessing) {
     return <LoadingScreen />;
   }
 
@@ -66,6 +101,7 @@ export const UploadScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Add to Wardrobe</Text>
+        <Text style={styles.subtitle}>Background will be automatically removed</Text>
       </View>
 
       {!image ? (
@@ -84,23 +120,53 @@ export const UploadScreen = () => {
         </View>
       ) : (
         <View style={styles.previewContainer}>
-          <Image source={{ uri: image }} style={styles.previewImage} />
-          {analysisResult && (
-            <View style={styles.analysisContainer}>
-              <Text style={styles.analysisTitle}>Analysis Results</Text>
-              <Text style={styles.analysisText}>Type: {analysisResult.type}</Text>
-              <Text style={styles.analysisText}>Category: {analysisResult.category}</Text>
-              <Text style={styles.analysisText}>Color: {analysisResult.color}</Text>
-              <Text style={styles.analysisText}>
-                Tags: {analysisResult.tags.join(', ')}
+          <View style={styles.imageComparison}>
+            <View style={styles.imageSection}>
+              <Text style={styles.imageLabel}>Original</Text>
+              <Image source={{ uri: image }} style={styles.previewImage} />
+            </View>
+            
+            {processedImage && (
+              <View style={styles.imageSection}>
+                <Text style={styles.imageLabel}>Background Removed</Text>
+                <Image source={{ uri: processedImage }} style={styles.previewImage} />
+              </View>
+            )}
+          </View>
+          
+          {processingResult && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultTitle}>Processing Results</Text>
+              <Text style={styles.resultText}>
+                Status: {processingResult.success ? 'Success' : 'Failed'}
               </Text>
+              {processingResult.error && (
+                <Text style={styles.errorText}>Error: {processingResult.error}</Text>
+              )}
+              {processingResult.steps && processingResult.steps.length > 0 && (
+                <View style={styles.stepsContainer}>
+                  <Text style={styles.stepsTitle}>Processing Steps:</Text>
+                  {processingResult.steps.map((step: any, index: number) => (
+                    <View key={index} style={styles.stepItem}>
+                      <Text style={styles.stepText}>
+                        {step.name}: {step.status} ({step.progress}%)
+                      </Text>
+                      {step.error && (
+                        <Text style={styles.stepError}>Error: {step.error}</Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
+          
           <TouchableOpacity
             style={styles.retakeButton}
             onPress={() => {
               setImage(null);
-              setAnalysisResult(null);
+              setProcessedImage(null);
+              setProcessingResult(null);
             }}
           >
             <Text style={styles.retakeButtonText}>Take Another Photo</Text>
@@ -115,71 +181,122 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    padding: 20,
   },
   header: {
-    padding: theme.spacing.lg,
+    alignItems: 'center',
+    marginBottom: 30,
   },
   title: {
-    ...theme.typography.h5,
+    fontSize: 24,
+    fontWeight: 'bold',
     color: theme.colors.onBackground,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: theme.colors.grey[600],
+    textAlign: 'center',
   },
   uploadContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.lg,
   },
   buttonContainer: {
-    width: '100%',
-    maxWidth: 400,
+    gap: 20,
   },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: 200,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
   },
   buttonText: {
-    ...theme.typography.button,
+    fontSize: 16,
     color: theme.colors.primary,
-    marginLeft: theme.spacing.md,
+    marginTop: 8,
+    fontWeight: '600',
   },
   previewContainer: {
     flex: 1,
-    padding: theme.spacing.md,
+  },
+  imageComparison: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  imageSection: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  imageLabel: {
+    fontSize: 14,
+    color: theme.colors.grey[600],
+    marginBottom: 8,
+    fontWeight: '600',
   },
   previewImage: {
     width: '100%',
-    height: 300,
-    borderRadius: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    height: 200,
+    borderRadius: 12,
+    resizeMode: 'cover',
   },
-  analysisContainer: {
+  resultContainer: {
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
   },
-  analysisTitle: {
-    ...theme.typography.h6,
+  resultTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: theme.colors.onBackground,
-    marginBottom: theme.spacing.md,
+    marginBottom: 8,
   },
-  analysisText: {
-    ...theme.typography.body1,
+  resultText: {
+    fontSize: 14,
     color: theme.colors.onBackground,
-    marginBottom: theme.spacing.sm,
+    marginBottom: 4,
+  },
+  errorText: {
+    fontSize: 14,
+    color: theme.colors.error,
+    marginTop: 4,
   },
   retakeButton: {
     backgroundColor: theme.colors.primary,
-    padding: theme.spacing.md,
-    borderRadius: theme.spacing.md,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
   },
   retakeButtonText: {
-    ...theme.typography.button,
-    color: theme.colors.onPrimary,
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  stepsContainer: {
+    marginTop: 10,
+  },
+  stepsTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: theme.colors.onBackground,
+    marginBottom: 4,
+  },
+  stepItem: {
+    marginBottom: 4,
+  },
+  stepText: {
+    fontSize: 13,
+    color: theme.colors.onBackground,
+  },
+  stepError: {
+    fontSize: 12,
+    color: theme.colors.error,
+    marginTop: 2,
   },
 }); 

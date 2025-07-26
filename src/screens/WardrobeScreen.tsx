@@ -23,9 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { theme } from '../theme';
-import { aiService } from '../services/AIService';
-import { imageProcessingService, ImageProcessingResult, ProcessingStep } from '../services/ImageProcessingService';
-import { removeBgService } from '../services/RemoveBgService';
+import AIService from '../services/AIService';
 
 interface ClothingItem {
   id: string;
@@ -45,7 +43,6 @@ interface UploadState {
   itemCategory: string;
   itemColor: string;
   itemDescription: string;
-  processingSteps?: ProcessingStep[];
 }
 
 export const WardrobeScreen = () => {
@@ -102,10 +99,17 @@ export const WardrobeScreen = () => {
 
   const categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories', 'Outerwear'];
 
-  // Mock AI background removal
-  const processImageWithAI = async (imageUri: string): Promise<ImageProcessingResult> => {
-    // Use the full enhanced processing pipeline (Remove.bg + Runway ML)
-    return await imageProcessingService.processImage(imageUri);
+  // AI background removal
+  const processImageWithAI = async (imageUri: string): Promise<{ success: boolean; processedImageUri?: string; error?: string }> => {
+    try {
+      const processedImageUri = await AIService.removeBackground(imageUri);
+      return { success: true, processedImageUri };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
   };
 
   const pickImage = async () => {
@@ -183,28 +187,22 @@ export const WardrobeScreen = () => {
     setUploadState(prev => ({ 
       ...prev, 
       isProcessing: true,
-      processingSteps: [
-        { name: 'Background Removal (Remove.bg)', status: 'pending', progress: 0 },
-        { name: 'Clothing Segmentation (Runway ML)', status: 'pending', progress: 0 },
-      ]
     }));
 
     try {
       const result = await processImageWithAI(uploadState.originalImage);
       
-      if (result.success && result.segmentedClothingUri) {
+      if (result.success && result.processedImageUri) {
         setUploadState(prev => ({
           ...prev,
-          processedImage: result.segmentedClothingUri || null,
+          processedImage: result.processedImageUri || null,
           isProcessing: false,
-          processingSteps: result.steps,
         }));
       } else {
         Alert.alert('Error', result.error || 'Failed to process image. Please try again.');
         setUploadState(prev => ({ 
           ...prev, 
           isProcessing: false,
-          processingSteps: result.steps,
         }));
       }
     } catch (error) {
@@ -240,7 +238,7 @@ export const WardrobeScreen = () => {
       itemCategory: 'Tops',
       itemColor: '',
       itemDescription: '',
-      processingSteps: undefined,
+
     });
 
     Alert.alert('Success', 'Clothing item added to your wardrobe!');
@@ -426,41 +424,7 @@ export const WardrobeScreen = () => {
                     AI is processing your image...
                   </Text>
                   
-                  {uploadState.processingSteps && (
-                    <View style={styles.stepsContainer}>
-                      {uploadState.processingSteps.map((step, index) => (
-                        <View key={index} style={styles.stepItem}>
-                          <View style={styles.stepHeader}>
-                            <Text style={[
-                              styles.stepName,
-                              step.status === 'completed' && styles.stepCompleted,
-                              step.status === 'failed' && styles.stepFailed
-                            ]}>
-                              {step.name}
-                            </Text>
-                            <Text style={[
-                              styles.stepStatus,
-                              step.status === 'completed' && styles.stepCompleted,
-                              step.status === 'failed' && styles.stepFailed
-                            ]}>
-                              {step.status === 'pending' && '⏳'}
-                              {step.status === 'processing' && '🔄'}
-                              {step.status === 'completed' && '✅'}
-                              {step.status === 'failed' && '❌'}
-                            </Text>
-                          </View>
-                          {step.status === 'processing' && (
-                            <View style={styles.progressBar}>
-                              <View style={[styles.progressFill, { width: `${step.progress}%` }]} />
-                            </View>
-                          )}
-                          {step.error && (
-                            <Text style={styles.stepError}>{step.error}</Text>
-                          )}
-                        </View>
-                      ))}
-                    </View>
-                  )}
+
                 </View>
               )}
             </Card>

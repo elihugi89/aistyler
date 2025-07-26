@@ -75,14 +75,36 @@ class RemoveBgService {
         }
 
         console.log(`Remove.bg API request successful, processing response...`);
+        console.log('API Response Status:', apiResponse.status);
+        console.log('API Response Headers:', JSON.stringify(Object.fromEntries(apiResponse.headers.entries()), null, 2));
+        console.log('API Response Content-Type:', apiResponse.headers.get('content-type'));
+        console.log('API Response Content-Length:', apiResponse.headers.get('content-length'));
 
-        // Get the processed image as blob
-        const processedImageBlob = await apiResponse.blob();
+        // Get the processed image as array buffer
+        const arrayBuffer = await apiResponse.arrayBuffer();
+        console.log('Processed Image ArrayBuffer size:', arrayBuffer.byteLength);
         
-        // Convert blob to URI for React Native
-        const processedImageUri = await this.blobToUri(processedImageBlob);
+        // Convert array buffer to base64
+        const base64Data = this.arrayBufferToBase64(arrayBuffer);
+        console.log('Base64 conversion complete, length:', base64Data.length);
+        
+        // Create a temporary file
+        const FileSystem = require('expo-file-system');
+        const fileName = `removed_bg_${Date.now()}.png`;
+        const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+        
+        console.log('Saving processed image to:', fileUri);
+        
+        // Write the base64 data to file
+        await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        
+        console.log('File saved successfully:', fileUri);
+        const processedImageUri = fileUri;
 
         console.log(`Background removal completed successfully!`);
+        console.log('Final processed image URI:', processedImageUri);
 
         return {
           success: true,
@@ -111,16 +133,14 @@ class RemoveBgService {
     };
   }
 
-  // Helper function to convert blob to URI
-  private async blobToUri(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve(reader.result as string);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+  // Convert ArrayBuffer to base64 string
+  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   }
 
   // Get API usage information
