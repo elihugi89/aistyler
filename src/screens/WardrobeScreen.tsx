@@ -57,7 +57,7 @@ export const WardrobeScreen = () => {
       name: 'Silk Wrap Dress',
       category: 'Dresses',
       color: 'Navy',
-      imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop',
+      imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c219d395e971b5c909cb0_Frame%202.jpg',
       description: 'Elegant silk wrap dress perfect for formal occasions',
     },
     {
@@ -65,7 +65,7 @@ export const WardrobeScreen = () => {
       name: 'Strappy Heels',
       category: 'Shoes',
       color: 'Silver',
-      imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=800&fit=crop',
+      imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215a3b7410473cbc2345_Frame%201%202.jpg',
       description: 'Classic strappy heels for evening wear',
     },
     {
@@ -73,7 +73,7 @@ export const WardrobeScreen = () => {
       name: 'Pearl Earrings',
       category: 'Accessories',
       color: 'White',
-      imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=800&fit=crop',
+      imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/66070420b7638d7c6b4aeaaf_4.jpg',
       description: 'Timeless pearl earrings for elegant looks',
     },
     {
@@ -81,24 +81,8 @@ export const WardrobeScreen = () => {
       name: 'Tailored Blazer',
       category: 'Outerwear',
       color: 'Black',
-      imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop',
+      imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215e8b46e32ae547ad09_Frame%203%202.jpg',
       description: 'Professional blazer for business meetings',
-    },
-    {
-      id: '5',
-      name: 'Cashmere Sweater',
-      category: 'Tops',
-      color: 'Cream',
-      imageUri: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop',
-      description: 'Luxurious cashmere sweater for everyday elegance',
-    },
-    {
-      id: '6',
-      name: 'Wide-Leg Trousers',
-      category: 'Bottoms',
-      color: 'Charcoal',
-      imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop',
-      description: 'Sophisticated wide-leg trousers for professional settings',
     },
   ]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -529,17 +513,17 @@ const styles = StyleSheet.create({
   itemsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 10,
+    padding: 8,
   },
   itemCard: {
-    width: (width - 30) / 2,
+    width: (width - 40) / 3,
     marginBottom: 30,
-    marginHorizontal: 5,
+    marginHorizontal: 3,
   },
   itemImageContainer: {
     position: 'relative',
     width: '100%',
-    height: (width - 30) / 2 * 1.4,
+    height: (width - 40) / 3 * 1.4,
     backgroundColor: '#f8f8f8',
     marginBottom: 12,
   },

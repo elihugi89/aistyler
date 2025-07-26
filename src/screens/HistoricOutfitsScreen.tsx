@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import {
   Text,
@@ -15,6 +17,8 @@ import {
   Button,
 } from '@rneui/themed';
 import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 interface HistoricOutfit {
   id: string;
@@ -40,9 +44,9 @@ const HistoricOutfitsScreen = () => {
       occasion: 'Wedding',
       date: '2024-07-15',
       items: [
-        { id: '1', name: 'Floral Maxi Dress', category: 'Dress', imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop' },
-        { id: '2', name: 'Nude Heels', category: 'Shoes', imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop' },
-        { id: '3', name: 'Gold Hoop Earrings', category: 'Accessories', imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop' },
+        { id: '1', name: 'Silk Wrap Dress', category: 'Dress', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c219d395e971b5c909cb0_Frame%202.jpg' },
+        { id: '2', name: 'Strappy Heels', category: 'Shoes', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215a3b7410473cbc2345_Frame%201%202.jpg' },
+        { id: '3', name: 'Pearl Earrings', category: 'Accessories', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/66070420b7638d7c6b4aeaaf_4.jpg' },
       ],
       rating: 5,
       notes: 'Perfect for outdoor summer wedding. Got many compliments!',
@@ -54,10 +58,10 @@ const HistoricOutfitsScreen = () => {
       occasion: 'Business',
       date: '2024-07-10',
       items: [
-        { id: '4', name: 'Navy Blazer', category: 'Outerwear', imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop' },
-        { id: '5', name: 'White Blouse', category: 'Top', imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop' },
-        { id: '6', name: 'Black Pencil Skirt', category: 'Bottom', imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop' },
-        { id: '7', name: 'Black Pumps', category: 'Shoes', imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop' },
+        { id: '4', name: 'Tailored Blazer', category: 'Outerwear', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215e8b46e32ae547ad09_Frame%203%202.jpg' },
+        { id: '5', name: 'Silk Wrap Dress', category: 'Dress', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c219d395e971b5c909cb0_Frame%202.jpg' },
+        { id: '6', name: 'Strappy Heels', category: 'Shoes', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215a3b7410473cbc2345_Frame%201%202.jpg' },
+        { id: '7', name: 'Pearl Earrings', category: 'Accessories', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/66070420b7638d7c6b4aeaaf_4.jpg' },
       ],
       rating: 4,
       notes: 'Professional and confident look. Got the job!',
@@ -69,9 +73,9 @@ const HistoricOutfitsScreen = () => {
       occasion: 'Casual',
       date: '2024-07-08',
       items: [
-        { id: '8', name: 'Black Dress', category: 'Dress', imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop' },
-        { id: '9', name: 'Red Heels', category: 'Shoes', imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop' },
-        { id: '10', name: 'Silver Necklace', category: 'Accessories', imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop' },
+        { id: '8', name: 'Silk Wrap Dress', category: 'Dress', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c219d395e971b5c909cb0_Frame%202.jpg' },
+        { id: '9', name: 'Strappy Heels', category: 'Shoes', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215a3b7410473cbc2345_Frame%201%202.jpg' },
+        { id: '10', name: 'Pearl Earrings', category: 'Accessories', imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/66070420b7638d7c6b4aeaaf_4.jpg' },
       ],
       rating: 5,
       notes: 'Classic and elegant. Great for dinner and drinks.',
@@ -105,143 +109,137 @@ const HistoricOutfitsScreen = () => {
   };
 
   const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Ionicons
-        key={i}
-        name={i < rating ? 'star' : 'star-outline'}
-        size={16}
-        color={i < rating ? '#f59e0b' : '#ccc'}
-      />
-    ));
+    return (
+      <View style={styles.starsContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Ionicons
+            key={star}
+            name={star <= rating ? 'star' : 'star-outline'}
+            size={12}
+            color={star <= rating ? '#000000' : '#e0e0e0'}
+            style={styles.star}
+          />
+        ))}
+      </View>
+    );
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
   const getOccasionColor = (occasion: string) => {
     switch (occasion.toLowerCase()) {
-      case 'wedding': return '#e91e63';
-      case 'business': return '#2196f3';
-      case 'casual': return '#4caf50';
-      case 'formal': return '#9c27b0';
-      default: return '#6366f1';
+      case 'wedding':
+        return '#000000';
+      case 'business':
+        return '#666666';
+      case 'casual':
+        return '#999999';
+      default:
+        return '#666666';
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
+      {/* Header */}
       <View style={styles.header}>
-        <Text h4 style={styles.headerTitle}>My Outfit History</Text>
+        <Text style={styles.headerTitle}>OUTFIT HISTORY</Text>
         <Text style={styles.headerSubtitle}>
-          Your saved and worn outfits
+          {historicOutfits.length} saved outfits
         </Text>
       </View>
 
-      {historicOutfits.length === 0 ? (
-        <Card containerStyle={styles.emptyCard}>
-          <View style={styles.emptyContent}>
-            <Ionicons name="shirt-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyTitle}>No Outfits Yet</Text>
-            <Text style={styles.emptyText}>
-              Your saved outfits will appear here. Create your first outfit suggestion to get started!
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {historicOutfits.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>NO SAVED OUTFITS</Text>
+            <Text style={styles.emptySubtitle}>
+              Your saved outfit suggestions will appear here
             </Text>
-            <Button
-              title="Create Outfit"
-              onPress={() => Alert.alert('Navigate', 'Navigate to Home to create outfit')}
-              containerStyle={styles.emptyButton}
-            />
           </View>
-        </Card>
-      ) : (
-        historicOutfits.map((outfit) => (
-          <Card key={outfit.id} containerStyle={styles.outfitCard}>
-            <View style={styles.outfitHeader}>
-              <View style={styles.outfitTitleContainer}>
-                <Text style={styles.outfitTitle}>{outfit.name}</Text>
-                <View style={styles.outfitMeta}>
-                  <Chip
-                    title={outfit.occasion}
-                    type="outline"
-                    size="sm"
-                    containerStyle={[styles.occasionChip, { borderColor: getOccasionColor(outfit.occasion) }]}
-                    titleStyle={{ color: getOccasionColor(outfit.occasion) }}
-                  />
-                  <Text style={styles.outfitDate}>{formatDate(outfit.date)}</Text>
+        ) : (
+          historicOutfits.map((outfit) => (
+            <View key={outfit.id} style={styles.outfitCard}>
+              {/* Outfit Header */}
+              <View style={styles.outfitHeader}>
+                <View style={styles.outfitInfo}>
+                  <Text style={styles.outfitName}>{outfit.name}</Text>
+                  <View style={styles.outfitMeta}>
+                    <View style={[styles.occasionBadge, { backgroundColor: getOccasionColor(outfit.occasion) }]}>
+                      <Text style={styles.occasionText}>{outfit.occasion.toUpperCase()}</Text>
+                    </View>
+                    <Text style={styles.outfitDate}>{formatDate(outfit.date)}</Text>
+                  </View>
+                </View>
+                <View style={styles.outfitActions}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => toggleFavorite(outfit.id)}
+                  >
+                    <Ionicons
+                      name={outfit.isFavorite ? 'heart' : 'heart-outline'}
+                      size={16}
+                      color={outfit.isFavorite ? '#000000' : '#666666'}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => deleteOutfit(outfit.id)}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#666666" />
+                  </TouchableOpacity>
                 </View>
               </View>
-              <View style={styles.outfitActions}>
-                <TouchableOpacity
-                  onPress={() => toggleFavorite(outfit.id)}
-                  style={styles.actionButton}
-                >
-                  <Ionicons
-                    name={outfit.isFavorite ? 'heart' : 'heart-outline'}
-                    size={20}
-                    color={outfit.isFavorite ? '#e91e63' : '#ccc'}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => deleteOutfit(outfit.id)}
-                  style={styles.actionButton}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#ff6b6b" />
-                </TouchableOpacity>
-              </View>
-            </View>
 
-            <View style={styles.outfitItems}>
-              {outfit.items.map((item) => (
-                <View key={item.id} style={styles.outfitItem}>
-                  <View style={styles.itemImageContainer}>
-                    {item.imageUri ? (
-                      <Image
-                        source={{ uri: item.imageUri }}
-                        style={styles.itemImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.itemPlaceholder}>
-                        <Ionicons name="shirt-outline" size={24} color="#ccc" />
+              {/* Outfit Items */}
+              <View style={styles.outfitItems}>
+                <Text style={styles.itemsLabel}>PIECES</Text>
+                <View style={styles.itemsGrid}>
+                  {outfit.items.map((item) => (
+                    <View key={item.id} style={styles.itemContainer}>
+                      <View style={styles.itemImageContainer}>
+                        <Image
+                          source={{ uri: item.imageUri }}
+                          style={styles.itemImage}
+                          resizeMode="cover"
+                        />
                       </View>
-                    )}
-                  </View>
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemCategory}>{item.category}</Text>
-                  </View>
+                      <View style={styles.itemInfo}>
+                        <Text style={styles.itemName}>{item.name}</Text>
+                        <Text style={styles.itemCategory}>{item.category}</Text>
+                      </View>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-
-            {outfit.notes && (
-              <View style={styles.notesContainer}>
-                <Ionicons name="chatbubble-outline" size={16} color="#6366f1" />
-                <Text style={styles.notesText}>{outfit.notes}</Text>
               </View>
-            )}
 
-            <View style={styles.outfitFooter}>
-              <View style={styles.ratingContainer}>
+              {/* Rating */}
+              <View style={styles.ratingSection}>
+                <Text style={styles.ratingLabel}>RATING</Text>
                 {renderStars(outfit.rating)}
-                <Text style={styles.ratingText}>{outfit.rating}/5</Text>
               </View>
-              <Button
-                title="Wear Again"
-                type="outline"
-                size="sm"
-                onPress={() => Alert.alert('Wear Again', 'Outfit added to today\'s suggestions!')}
-              />
+
+              {/* Notes */}
+              {outfit.notes && (
+                <View style={styles.notesSection}>
+                  <Text style={styles.notesLabel}>NOTES</Text>
+                  <Text style={styles.notesText}>{outfit.notes}</Text>
+                </View>
+              )}
             </View>
-          </Card>
-        ))
-      )}
-    </ScrollView>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -251,140 +249,179 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   header: {
-    padding: 20,
-    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   headerTitle: {
-    marginBottom: 5,
+    fontSize: 28,
+    fontWeight: '300',
+    color: '#000000',
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   headerSubtitle: {
-    opacity: 0.7,
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '300',
+    letterSpacing: 1,
   },
-  emptyCard: {
-    margin: 16,
-    borderRadius: 12,
+  scrollContent: {
+    flex: 1,
   },
-  emptyContent: {
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    paddingVertical: 60,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
     marginBottom: 8,
   },
-  emptyText: {
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '300',
     textAlign: 'center',
-    opacity: 0.7,
-    marginBottom: 24,
-  },
-  emptyButton: {
-    width: '100%',
   },
   outfitCard: {
-    margin: 16,
-    borderRadius: 12,
+    margin: 20,
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   outfitHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  outfitTitleContainer: {
+  outfitInfo: {
     flex: 1,
   },
-  outfitTitle: {
+  outfitName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '400',
+    color: '#000000',
+    letterSpacing: 1,
     marginBottom: 8,
   },
   outfitMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  occasionChip: {
-    marginRight: 12,
+  occasionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  occasionText: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
   outfitDate: {
     fontSize: 12,
-    opacity: 0.6,
+    color: '#666666',
+    fontWeight: '300',
   },
   outfitActions: {
     flexDirection: 'row',
+    gap: 8,
   },
   actionButton: {
-    padding: 8,
-    marginLeft: 8,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   outfitItems: {
+    marginBottom: 20,
+  },
+  itemsLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  itemsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
+    gap: 12,
   },
-  outfitItem: {
-    width: '48%',
-    marginBottom: 12,
-    marginRight: '2%',
+  itemContainer: {
+    width: (width - 80) / 3,
+    alignItems: 'center',
   },
   itemImageContainer: {
     width: '100%',
-    height: 80,
-    borderRadius: 8,
-    overflow: 'hidden',
+    height: (width - 80) / 3 * 1.2,
+    backgroundColor: '#f8f8f8',
     marginBottom: 8,
   },
   itemImage: {
     width: '100%',
     height: '100%',
   },
-  itemPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   itemInfo: {
-    paddingHorizontal: 4,
+    alignItems: 'center',
   },
   itemName: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '400',
+    color: '#000000',
+    textAlign: 'center',
     marginBottom: 2,
   },
   itemCategory: {
     fontSize: 10,
-    opacity: 0.6,
+    color: '#666666',
+    fontWeight: '300',
+    textAlign: 'center',
   },
-  notesContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
+  ratingSection: {
     marginBottom: 16,
+  },
+  ratingLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  star: {
+    marginRight: 2,
+  },
+  notesSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 16,
+  },
+  notesLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   notesText: {
     fontSize: 14,
-    marginLeft: 8,
-    flex: 1,
-    opacity: 0.8,
-  },
-  outfitFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#000000',
+    fontWeight: '300',
+    lineHeight: 20,
   },
 });
 

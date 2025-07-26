@@ -91,28 +91,28 @@ export const HomeScreen = () => {
         name: 'Silk Wrap Dress', 
         category: 'Dress', 
         color: 'Navy', 
-        imageUri: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop'
+        imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c219d395e971b5c909cb0_Frame%202.jpg'
       },
       { 
         id: '2', 
         name: 'Strappy Heels', 
         category: 'Shoes', 
         color: 'Silver', 
-        imageUri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=800&fit=crop'
+        imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215a3b7410473cbc2345_Frame%201%202.jpg'
       },
       { 
         id: '3', 
         name: 'Pearl Earrings', 
         category: 'Accessories', 
         color: 'White', 
-        imageUri: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=800&fit=crop'
+        imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/66070420b7638d7c6b4aeaaf_4.jpg'
       },
       { 
         id: '4', 
-        name: 'Silver Clutch', 
-        category: 'Accessories', 
-        color: 'Silver', 
-        imageUri: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&h=800&fit=crop'
+        name: 'Tailored Blazer', 
+        category: 'Outerwear', 
+        color: 'Black', 
+        imageUri: 'https://cdn.prod.website-files.com/6256995755a7ea0a3d8fbd11/660c215e8b46e32ae547ad09_Frame%203%202.jpg'
       },
     ],
     hairMakeup: 'Soft curls with natural glam look - bronze tones, nude lipstick',
